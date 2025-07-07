@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: Crypto Analytics Dashboard API
+  description: Backend API for the Crypto Analytics Dashboard application
+  version: 1.0.0
+  contact:
+    name: Crypto Analytics Team
+    email: support@cryptoanalytics.com
+
+servers:
+  - url: http://c146586b-67c7-4f1b-92f5-d748e302190f-3000.toinfinityandbeyond.quest/api
+    description: Development server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Bad request - validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /crypto/top:
+    get:
+      summary: Get top cryptocurrencies
+      tags:
+        - Crypto Data
+      parameters:
+        - name: limit
+          in: query
+          description: Number of coins to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 250
+            default: 100
+        - name: vs_currency
+          in: query
+          description: Target currency
+          schema:
+            type: string
+            default: 'usd'
+      responses:
+        '200':
+          description: List of top cryptocurrencies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoinOverview'
+
+  /crypto/{coinId}:
+    get:
+      summary: Get detailed coin information
+      tags:
+        - Crypto Data
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          description: CoinGecko coin ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed coin information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoinDetails'
+
+  /crypto/{coinId}/chart:
+    get:
+      summary: Get coin price chart data
+      tags:
+        - Crypto Data
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          description: CoinGecko coin ID
+          schema:
+            type: string
+        - name: days
+          in: query
+          description: Number of days for chart data
+          schema:
+            type: string
+            enum: ['1', '7', '30', '90', '365']
+            default: '7'
+      responses:
+        '200':
+          description: Chart data for the coin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+
+  /news/{coinId}:
+    get:
+      summary: Get news for a specific coin
+      tags:
+        - News
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          description: CoinGecko coin ID
+          schema:
+            type: string
+        - name: days
+          in: query
+          description: News from past N days
+          schema:
+            type: integer
+            default: 3
+      responses:
+        '200':
+          description: News articles for the coin
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsArticle'
+
+  /ai/predict:
+    post:
+      summary: Get AI prediction for a coin
+      tags:
+        - AI Predictions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictionRequest'
+      responses:
+        '200':
+          description: AI prediction result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /user/settings:
+    get:
+      summary: Get user settings
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+    
+    put:
+      summary: Update user settings
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettingsRequest'
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "securepassword123"
+        name:
+          type: string
+          minLength: 2
+          example: "John Doe"
+
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "User created successfully"
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "clx123abc456"
+        email:
+          type: string
+          example: "user@example.com"
+        name:
+          type: string
+          nullable: true
+          example: "John Doe"
+        createdAt:
+          type: string
+          format: date-time
+        settings:
+          $ref: '#/components/schemas/UserSettings'
+
+    UserSettings:
+      type: object
+      properties:
+        id:
+          type: string
+        theme:
+          type: string
+          enum: ['light', 'dark']
+          default: 'dark'
+        notifications:
+          type: boolean
+          default: true
+        defaultCurrency:
+          type: string
+          default: 'USD'
+        openaiApiKey:
+          type: string
+          nullable: true
+          description: "Encrypted API key"
+
+    UpdateSettingsRequest:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum: ['light', 'dark']
+        notifications:
+          type: boolean
+        defaultCurrency:
+          type: string
+        openaiApiKey:
+          type: string
+          nullable: true
+
+    CoinOverview:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "bitcoin"
+        symbol:
+          type: string
+          example: "btc"
+        name:
+          type: string
+          example: "Bitcoin"
+        image:
+          type: string
+          format: uri
+          example: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png"
+        current_price:
+          type: number
+          example: 43500.25
+        market_cap:
+          type: number
+          example: 850000000000
+        market_cap_rank:
+          type: integer
+          example: 1
+        price_change_percentage_24h:
+          type: number
+          example: 2.45
+        total_volume:
+          type: number
+          example: 25000000000
+
+    CoinDetails:
+      type: object
+      properties:
+        id:
+          type: string
+        symbol:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        image:
+          type: object
+          properties:
+            large:
+              type: string
+              format: uri
+        market_data:
+          type: object
+          properties:
+            current_price:
+              type: object
+              additionalProperties:
+                type: number
+            market_cap:
+              type: object
+              additionalProperties:
+                type: number
+            total_volume:
+              type: object
+              additionalProperties:
+                type: number
+            price_change_percentage_24h:
+              type: number
+
+    ChartData:
+      type: object
+      properties:
+        prices:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+            minItems: 2
+            maxItems: 2
+          description: "Array of [timestamp, price] pairs"
+
+    NewsArticle:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        url:
+          type: string
+          format: uri
+        publishedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          nullable: true
+        sentiment:
+          type: string
+          enum: ['positive', 'negative', 'neutral']
+          nullable: true
+
+    PredictionRequest:
+      type: object
+      required:
+        - coinId
+      properties:
+        coinId:
+          type: string
+          example: "bitcoin"
+
+    PredictionResponse:
+      type: object
+      properties:
+        coinId:
+          type: string
+        prediction:
+          type: string
+          enum: ['up', 'down', 'neutral']
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        explanation:
+          type: string
+        newsAnalyzed:
+          type: integer
+          description: "Number of news articles analyzed"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+          nullable: true
