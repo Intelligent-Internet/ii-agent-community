@@ -1,0 +1,633 @@
+openapi: 3.0.3
+info:
+  title: TripGenius API
+  description: AI-Powered Travel Planning API
+  version: 1.0.0
+  
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+              required: [name, email, password]
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input or user already exists
+
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required: [email, password]
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Invalid credentials
+
+  /user/profile:
+    get:
+      summary: Get user profile
+      tags: [User]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+
+  /user/preferences:
+    get:
+      summary: Get user preferences
+      tags: [User]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User preferences retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+    
+    put:
+      summary: Update user preferences
+      tags: [User]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        200:
+          description: Preferences updated successfully
+
+  /itineraries:
+    get:
+      summary: Get user's itineraries
+      tags: [Itineraries]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of itineraries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Itinerary'
+    
+    post:
+      summary: Create new itinerary
+      tags: [Itineraries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                destination:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                budget:
+                  type: number
+                preferences:
+                  type: object
+              required: [title, destination, startDate, endDate]
+      responses:
+        201:
+          description: Itinerary created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Itinerary'
+
+  /itineraries/{id}:
+    get:
+      summary: Get specific itinerary
+      tags: [Itineraries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Itinerary details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItineraryWithActivities'
+    
+    put:
+      summary: Update itinerary
+      tags: [Itineraries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Itinerary'
+      responses:
+        200:
+          description: Itinerary updated successfully
+
+  /ai/generate-itinerary:
+    post:
+      summary: Generate AI-powered itinerary
+      tags: [AI]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                budget:
+                  type: string
+                  enum: [budget, mid-range, luxury]
+                interests:
+                  type: array
+                  items:
+                    type: string
+                travelStyle:
+                  type: string
+                  enum: [solo, couple, family, group]
+              required: [destination, startDate, endDate, budget]
+      responses:
+        200:
+          description: AI-generated itinerary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  itinerary:
+                    $ref: '#/components/schemas/ItineraryWithActivities'
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+
+  /activities:
+    post:
+      summary: Add activity to itinerary
+      tags: [Activities]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activity'
+      responses:
+        201:
+          description: Activity added successfully
+
+  /activities/{id}:
+    put:
+      summary: Update activity
+      tags: [Activities]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activity'
+      responses:
+        200:
+          description: Activity updated successfully
+    
+    delete:
+      summary: Delete activity
+      tags: [Activities]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Activity deleted successfully
+
+  /bookings/hotels/search:
+    post:
+      summary: Search hotels (mock)
+      tags: [Bookings]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination:
+                  type: string
+                checkIn:
+                  type: string
+                  format: date
+                checkOut:
+                  type: string
+                  format: date
+                guests:
+                  type: number
+                budget:
+                  type: string
+      responses:
+        200:
+          description: Hotel search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HotelOption'
+
+  /bookings/flights/search:
+    post:
+      summary: Search flights (mock)
+      tags: [Bookings]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                departure:
+                  type: string
+                arrival:
+                  type: string
+                departureDate:
+                  type: string
+                  format: date
+                returnDate:
+                  type: string
+                  format: date
+                passengers:
+                  type: number
+      responses:
+        200:
+          description: Flight search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FlightOption'
+
+  /bookings:
+    post:
+      summary: Create booking
+      tags: [Bookings]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+      responses:
+        201:
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    UserPreferences:
+      type: object
+      properties:
+        budget:
+          type: string
+          enum: [budget, mid-range, luxury]
+        interests:
+          type: array
+          items:
+            type: string
+        travelStyle:
+          type: string
+          enum: [solo, couple, family, group]
+        accommodation:
+          type: string
+          enum: [hotel, hostel, airbnb, resort]
+        transportation:
+          type: string
+          enum: [flight, train, car, mix]
+
+    Itinerary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        destination:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        budget:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [draft, confirmed, completed]
+        isPublic:
+          type: boolean
+        aiGenerated:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        category:
+          type: string
+          enum: [sightseeing, food, adventure, culture, relaxation]
+        duration:
+          type: number
+        cost:
+          type: number
+        date:
+          type: string
+          format: date-time
+        startTime:
+          type: string
+        endTime:
+          type: string
+        imageUrl:
+          type: string
+        rating:
+          type: number
+        website:
+          type: string
+        address:
+          type: string
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        aiSuggested:
+          type: boolean
+
+    ItineraryWithActivities:
+      allOf:
+        - $ref: '#/components/schemas/Itinerary'
+        - type: object
+          properties:
+            activities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Activity'
+
+    HotelOption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        rating:
+          type: number
+        price:
+          type: number
+        currency:
+          type: string
+        imageUrl:
+          type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        roomTypes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              price:
+                type: number
+              available:
+                type: boolean
+
+    FlightOption:
+      type: object
+      properties:
+        id:
+          type: string
+        airline:
+          type: string
+        flightNumber:
+          type: string
+        departure:
+          type: string
+        arrival:
+          type: string
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        duration:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+        seatClass:
+          type: string
+        availableSeats:
+          type: number
+
+    BookingRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [hotel, flight]
+        itineraryId:
+          type: string
+        optionId:
+          type: string
+        details:
+          type: object
+      required: [type, optionId]
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        bookingReference:
+          type: string
+        totalAmount:
+          type: number
+        currency:
+          type: string
+        details:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
