@@ -1,0 +1,139 @@
+// TripGenius Database Schema
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  itineraries Itinerary[]
+  preferences UserPreferences?
+  bookings    Booking[]
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id       String @id @default(cuid())
+  userId   String @unique
+  budget   String? // "budget", "mid-range", "luxury"
+  interests String[] // Array of interests like ["food", "history", "adventure"]
+  travelStyle String? // "solo", "couple", "family", "group"
+  accommodation String? // "hotel", "hostel", "airbnb", "resort"
+  transportation String? // "flight", "train", "car", "mix"
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_preferences")
+}
+
+model Itinerary {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  destination String
+  startDate   DateTime
+  endDate     DateTime
+  budget      Float?
+  currency    String   @default("USD")
+  status      String   @default("draft") // "draft", "confirmed", "completed"
+  isPublic    Boolean  @default(false)
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // User relationship
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Related entities
+  activities Activity[]
+  bookings   Booking[]
+
+  @@map("itineraries")
+}
+
+model Activity {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  location    String
+  category    String    // "sightseeing", "food", "adventure", "culture", "relaxation"
+  duration    Int?      // Duration in minutes
+  cost        Float?
+  currency    String    @default("USD")
+  date        DateTime
+  startTime   String?   // "HH:MM" format
+  endTime     String?   // "HH:MM" format
+  imageUrl    String?
+  rating      Float?
+  website     String?
+  address     String?
+  coordinates Json?     // {lat: number, lng: number}
+  aiSuggested Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Itinerary relationship
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  type        String   // "hotel", "flight"
+  status      String   @default("pending") // "pending", "confirmed", "cancelled"
+  
+  // Common booking fields
+  bookingReference String?
+  totalAmount Float
+  currency    String   @default("USD")
+  bookingDate DateTime @default(now())
+  
+  // Hotel specific fields
+  hotelName     String?
+  hotelAddress  String?
+  checkIn       DateTime?
+  checkOut      DateTime?
+  roomType      String?
+  guests        Int?
+  
+  // Flight specific fields
+  airline       String?
+  flightNumber  String?
+  departure     String?
+  arrival       String?
+  departureTime DateTime?
+  arrivalTime   DateTime?
+  passengers    Int?
+  seatClass     String?
+  
+  // Mock booking data
+  mockData Json? // Store additional mock booking details
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itineraryId String?
+  itinerary   Itinerary? @relation(fields: [itineraryId], references: [id], onDelete: SetNull)
+
+  @@map("bookings")
+}
