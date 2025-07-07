@@ -1,0 +1,418 @@
+openapi: 3.0.3
+info:
+  title: Collaborative Jigsaw Puzzle API
+  description: API for real-time multiplayer jigsaw puzzle game
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /rooms:
+    post:
+      summary: Create a new puzzle room
+      operationId: createRoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerName:
+                  type: string
+                  description: Name of the player creating the room
+                  example: "Alice"
+                puzzleImage:
+                  type: string
+                  description: Base64 encoded image or image URL
+                  example: "data:image/jpeg;base64,..."
+                difficulty:
+                  type: string
+                  enum: [easy, medium, hard]
+                  description: Puzzle difficulty level
+                  example: "medium"
+              required:
+                - playerName
+                - puzzleImage
+                - difficulty
+      responses:
+        '201':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  roomId:
+                    type: string
+                    description: Unique room identifier
+                    example: "room_123456"
+                  playerId:
+                    type: string
+                    description: Unique player identifier
+                    example: "player_abc123"
+                  puzzleId:
+                    type: string
+                    description: Unique puzzle identifier
+                    example: "puzzle_def456"
+        '400':
+          description: Invalid request data
+
+  /rooms/{roomId}/join:
+    post:
+      summary: Join an existing puzzle room
+      operationId: joinRoom
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Room ID to join
+          example: "room_123456"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playerName:
+                  type: string
+                  description: Name of the joining player
+                  example: "Bob"
+              required:
+                - playerName
+      responses:
+        '200':
+          description: Successfully joined room
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playerId:
+                    type: string
+                    description: Unique player identifier
+                    example: "player_xyz789"
+                  puzzle:
+                    $ref: '#/components/schemas/Puzzle'
+                  gameState:
+                    $ref: '#/components/schemas/GameState'
+        '404':
+          description: Room not found
+        '409':
+          description: Room is full (max 2 players)
+
+  /rooms/{roomId}:
+    get:
+      summary: Get room status and puzzle data
+      operationId: getRoomStatus
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Room ID
+          example: "room_123456"
+      responses:
+        '200':
+          description: Room status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  roomId:
+                    type: string
+                    example: "room_123456"
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Player'
+                  puzzle:
+                    $ref: '#/components/schemas/Puzzle'
+                  gameState:
+                    $ref: '#/components/schemas/GameState'
+                  isCompleted:
+                    type: boolean
+                    example: false
+        '404':
+          description: Room not found
+
+components:
+  schemas:
+    Player:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "player_abc123"
+        name:
+          type: string
+          example: "Alice"
+        isConnected:
+          type: boolean
+          example: true
+        cursor:
+          type: object
+          properties:
+            x:
+              type: number
+              example: 150.5
+            y:
+              type: number
+              example: 220.3
+          required:
+            - x
+            - y
+      required:
+        - id
+        - name
+        - isConnected
+
+    Puzzle:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "puzzle_def456"
+        imageUrl:
+          type: string
+          example: "/images/puzzle_def456.jpg"
+        width:
+          type: integer
+          example: 800
+        height:
+          type: integer
+          example: 600
+        pieceCount:
+          type: integer
+          example: 100
+        pieces:
+          type: array
+          items:
+            $ref: '#/components/schemas/PuzzlePiece'
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+          example: "medium"
+      required:
+        - id
+        - imageUrl
+        - width
+        - height
+        - pieceCount
+        - pieces
+        - difficulty
+
+    PuzzlePiece:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "piece_1"
+        row:
+          type: integer
+          example: 0
+        col:
+          type: integer
+          example: 0
+        correctX:
+          type: number
+          example: 0
+        correctY:
+          type: number
+          example: 0
+        currentX:
+          type: number
+          example: 450.5
+        currentY:
+          type: number
+          example: 320.7
+        isPlaced:
+          type: boolean
+          example: false
+        isLocked:
+          type: boolean
+          example: false
+        lockedBy:
+          type: string
+          nullable: true
+          example: "player_abc123"
+        shape:
+          type: object
+          properties:
+            path:
+              type: string
+              description: SVG path for piece shape
+              example: "M0,0 L100,0 Q105,15 100,30 L100,100 Q85,105 70,100 L0,100 Z"
+            connectors:
+              type: object
+              properties:
+                top:
+                  type: string
+                  enum: [none, out, in]
+                  example: "none"
+                right:
+                  type: string
+                  enum: [none, out, in]
+                  example: "out"
+                bottom:
+                  type: string
+                  enum: [none, out, in]
+                  example: "in"
+                left:
+                  type: string
+                  enum: [none, out, in]
+                  example: "none"
+              required:
+                - top
+                - right
+                - bottom
+                - left
+          required:
+            - path
+            - connectors
+      required:
+        - id
+        - row
+        - col
+        - correctX
+        - correctY
+        - currentX
+        - currentY
+        - isPlaced
+        - isLocked
+        - shape
+
+    GameState:
+      type: object
+      properties:
+        completedPieces:
+          type: integer
+          example: 15
+        totalPieces:
+          type: integer
+          example: 100
+        completionPercentage:
+          type: number
+          example: 15.0
+        isCompleted:
+          type: boolean
+          example: false
+        startTime:
+          type: string
+          format: date-time
+          example: "2023-07-03T14:30:00Z"
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+      required:
+        - completedPieces
+        - totalPieces
+        - completionPercentage
+        - isCompleted
+        - startTime
+
+# WebSocket Events (for documentation purposes)
+# These are not part of the REST API but define the real-time communication protocol
+
+websocket_events:
+  client_to_server:
+    piece_move:
+      description: Player is moving a puzzle piece
+      payload:
+        pieceId: string
+        x: number
+        y: number
+        playerId: string
+    
+    piece_pickup:
+      description: Player picks up a puzzle piece
+      payload:
+        pieceId: string
+        playerId: string
+    
+    piece_drop:
+      description: Player drops a puzzle piece
+      payload:
+        pieceId: string
+        x: number
+        y: number
+        playerId: string
+    
+    cursor_move:
+      description: Player cursor position update
+      payload:
+        x: number
+        y: number
+        playerId: string
+    
+    player_disconnect:
+      description: Player leaves the room
+      payload:
+        playerId: string
+
+  server_to_client:
+    piece_moved:
+      description: Broadcast piece movement to other players
+      payload:
+        pieceId: string
+        x: number
+        y: number
+        playerId: string
+    
+    piece_placed:
+      description: Piece was successfully placed in correct position
+      payload:
+        pieceId: string
+        playerId: string
+    
+    piece_locked:
+      description: Piece is being manipulated by another player
+      payload:
+        pieceId: string
+        lockedBy: string
+    
+    piece_unlocked:
+      description: Piece is no longer being manipulated
+      payload:
+        pieceId: string
+    
+    cursor_update:
+      description: Other player's cursor position
+      payload:
+        x: number
+        y: number
+        playerId: string
+        playerName: string
+    
+    player_joined:
+      description: New player joined the room
+      payload:
+        player:
+          id: string
+          name: string
+    
+    player_left:
+      description: Player left the room
+      payload:
+        playerId: string
+    
+    game_completed:
+      description: Puzzle has been completed
+      payload:
+        completionTime: string
+        totalPieces: number
+        players: array
+    
+    game_state_update:
+      description: General game state update
+      payload:
+        gameState: GameState
