@@ -1,0 +1,86 @@
+// Crypto Analytics Dashboard - Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  settings UserSettings?
+  watchlist Watchlist[]
+
+  @@map("users")
+}
+
+model UserSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  openaiApiKey    String?  // Encrypted
+  theme           String   @default("dark")
+  notifications   Boolean  @default(true)
+  defaultCurrency String   @default("USD")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  coinId    String   // CoinGecko coin ID (e.g., "bitcoin", "ethereum")
+  symbol    String   // Coin symbol (e.g., "BTC", "ETH")
+  name      String   // Coin name (e.g., "Bitcoin", "Ethereum")
+  addedAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coinId])
+  @@map("watchlist")
+}
+
+model CoinCache {
+  id            String   @id @default(cuid())
+  coinId        String   @unique
+  symbol        String
+  name          String
+  currentPrice  Float
+  marketCap     Float?
+  volume24h     Float?
+  priceChange24h Float?
+  lastUpdated   DateTime @default(now())
+
+  @@map("coin_cache")
+}
+
+model NewsCache {
+  id          String   @id @default(cuid())
+  coinId      String
+  title       String
+  description String?
+  url         String
+  publishedAt DateTime
+  source      String?
+  sentiment   String?  // positive, negative, neutral
+  createdAt   DateTime @default(now())
+
+  @@index([coinId, publishedAt])
+  @@map("news_cache")
+}
