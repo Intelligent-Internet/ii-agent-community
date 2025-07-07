@@ -1,0 +1,1129 @@
+openapi: 3.0.3
+info:
+  title: Instagram Clone API
+  description: A comprehensive API for Instagram clone features
+  version: 1.0.0
+  contact:
+    name: Instagram Clone Team
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.instagram-clone.com
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+        username:
+          type: string
+          description: Unique username
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          description: Display name
+        bio:
+          type: string
+          description: User biography
+        profileImage:
+          type: string
+          format: uri
+          description: Profile image URL
+        isVerified:
+          type: boolean
+          default: false
+        followersCount:
+          type: integer
+          minimum: 0
+        followingCount:
+          type: integer
+          minimum: 0
+        postsCount:
+          type: integer
+          minimum: 0
+        isPrivate:
+          type: boolean
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - email
+        - displayName
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        caption:
+          type: string
+        mediaUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        mediaType:
+          type: string
+          enum: [image, video, carousel]
+        location:
+          type: string
+        likesCount:
+          type: integer
+          minimum: 0
+        commentsCount:
+          type: integer
+          minimum: 0
+        isLiked:
+          type: boolean
+          description: Whether current user has liked this post
+        user:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - mediaUrls
+        - mediaType
+
+    Story:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        mediaUrl:
+          type: string
+          format: uri
+        mediaType:
+          type: string
+          enum: [image, video]
+        duration:
+          type: integer
+          description: Duration in seconds for video stories
+        expiresAt:
+          type: string
+          format: date-time
+        viewsCount:
+          type: integer
+          minimum: 0
+        isViewed:
+          type: boolean
+          description: Whether current user has viewed this story
+        user:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - mediaUrl
+        - mediaType
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        postId:
+          type: string
+        userId:
+          type: string
+        content:
+          type: string
+        likesCount:
+          type: integer
+          minimum: 0
+        isLiked:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - postId
+        - userId
+        - content
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        senderId:
+          type: string
+        content:
+          type: string
+        messageType:
+          type: string
+          enum: [text, image, video, post]
+        mediaUrl:
+          type: string
+          format: uri
+        isRead:
+          type: boolean
+        sender:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - senderId
+        - content
+        - messageType
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        lastMessage:
+          $ref: '#/components/schemas/Message'
+        unreadCount:
+          type: integer
+          minimum: 0
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - participants
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [like, comment, follow, mention, post]
+        message:
+          type: string
+        isRead:
+          type: boolean
+          default: false
+        actionUserId:
+          type: string
+          description: User who triggered the notification
+        actionUser:
+          $ref: '#/components/schemas/User'
+        relatedPostId:
+          type: string
+        relatedPost:
+          $ref: '#/components/schemas/Post'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - type
+        - message
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+      required:
+        - user
+        - accessToken
+        - refreshToken
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+      required:
+        - email
+        - password
+
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+      required:
+        - username
+        - email
+        - password
+        - displayName
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required:
+        - error
+        - message
+
+paths:
+  # Authentication endpoints
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # User endpoints
+  /users/profile:
+    get:
+      summary: Get current user profile
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update current user profile
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                bio:
+                  type: string
+                profileImage:
+                  type: string
+                  format: uri
+                isPrivate:
+                  type: boolean
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{userId}/follow:
+    post:
+      summary: Follow a user
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User followed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Unfollow a user
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User unfollowed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # Post endpoints
+  /posts:
+    get:
+      summary: Get feed posts
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+    post:
+      summary: Create a new post
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                caption:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                location:
+                  type: string
+              required:
+                - files
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /posts/{postId}:
+    get:
+      summary: Get post by ID
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a post
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Not authorized to delete this post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /posts/{postId}/like:
+    post:
+      summary: Like a post
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post liked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  likesCount:
+                    type: integer
+
+    delete:
+      summary: Unlike a post
+      tags: [Posts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post unliked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  likesCount:
+                    type: integer
+
+  /posts/{postId}/comments:
+    get:
+      summary: Get post comments
+      tags: [Comments]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Comments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+    post:
+      summary: Add a comment to a post
+      tags: [Comments]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+              required:
+                - content
+      responses:
+        '201':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Stories endpoints
+  /stories:
+    get:
+      summary: Get stories feed
+      tags: [Stories]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Stories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Story'
+
+    post:
+      summary: Create a new story
+      tags: [Stories]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                duration:
+                  type: integer
+                  description: Duration for video stories
+              required:
+                - file
+      responses:
+        '201':
+          description: Story created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+
+  # Messages endpoints
+  /conversations:
+    get:
+      summary: Get user conversations
+      tags: [Messages]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Conversations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+
+  /conversations/{conversationId}/messages:
+    get:
+      summary: Get messages in a conversation
+      tags: [Messages]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  pagination:
+                    type: object
+
+    post:
+      summary: Send a message
+      tags: [Messages]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                messageType:
+                  type: string
+                  enum: [text, image, video, post]
+                  default: text
+                mediaUrl:
+                  type: string
+                  format: uri
+              required:
+                - content
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  # Explore endpoints
+  /explore/posts:
+    get:
+      summary: Get explore posts
+      tags: [Explore]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Explore posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+
+  /explore/users:
+    get:
+      summary: Search users
+      tags: [Explore]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Users found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+  # Notifications endpoints
+  /notifications:
+    get:
+      summary: Get user notifications
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  unreadCount:
+                    type: integer
+
+  /notifications/{notificationId}/read:
+    put:
+      summary: Mark notification as read
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # File upload endpoint
+  /upload:
+    post:
+      summary: Upload file
+      tags: [Files]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+                  enum: [profile, post, story, message]
+              required:
+                - file
+                - type
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  filename:
+                    type: string
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Posts
+    description: Post management endpoints
+  - name: Comments
+    description: Comment management endpoints
+  - name: Stories
+    description: Stories management endpoints
+  - name: Messages
+    description: Direct messaging endpoints
+  - name: Explore
+    description: Content discovery endpoints
+  - name: Notifications
+    description: Notification management endpoints
+  - name: Files
+    description: File upload endpoints
