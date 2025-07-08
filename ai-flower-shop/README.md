@@ -1,5 +1,10 @@
 # 🌸 AI Flower Shop
 
+<img width="1360" alt="Screenshot 2025-07-08 at 21 58 38" src="https://github.com/user-attachments/assets/6d1173c7-b70b-44d0-9785-8eb6ef75347d" />
+
+<img width="1255" alt="Screenshot 2025-07-08 at 21 59 02" src="https://github.com/user-attachments/assets/33a3cb59-b06b-4b18-9573-129377b188d7" />
+
+
 An intelligent e-commerce platform that combines AI-powered product recommendations with a seamless shopping experience. Customers can chat with an AI assistant to discover the perfect flowers for any occasion.
 
 ## ✨ Features
