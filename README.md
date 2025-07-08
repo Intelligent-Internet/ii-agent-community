@@ -9,15 +9,6 @@
 
 Welcome to **ii‑agent‑community**—a curated collection of showcase projects created by ii‑agent. Explore innovative demos, tools, and libraries demonstrating technical skills, creativity, and variety.
 
-## Showcase Projects Videos
-
-https://github.com/user-attachments/assets/336652fd-4aaf-4cf2-8b3a-b724d35ec40c
-
-https://github.com/user-attachments/assets/647e6bae-bc62-4c8b-9e6e-a7c8946caf56
-
-https://github.com/user-attachments/assets/94d1da62-104d-4bc5-8ced-ddfcea3c0b51
-
-
 ---
 
 ## 🎯 Showcase Projects Code
@@ -34,3 +25,12 @@ Dive into each demo or tool: click the project folder to explore its code, demos
 | [**Enhanced Google Docs**](./enhanced-docs) | Create an enhance clone of google docs in which users can create documents, multiple users can view and edit the same documents, whenever you highlight a piece of text with your mouse, a bar appear on the cursor that allows you to enhance the highlighted part with AI (gpt-4o). And finally, whenever you press control + M, pop up a nice screen to allow user to generate text by AI (gpt-4o). No need to create authentication for users. You must complete all the requirements before you come back to me|
  | [**AI Flower Shop**](./ai-flower-shop) |  Let's create an AI flower shop, in which each product uploaded will be saved into a local vector database, which will be used for an AI flower seller to answer the product description and help the customer with flower information and find the best available flower based on the customer request. Also give the AI a tool that let it help add to cart a product for the customer as well as remove stuff from cart. Thus, the AI should have a vector database, can have messages history, can execute several actions mentioned above (execute the action and return to user). Here's my stripe key:The Ai should have 2 interface: One dedicated beautiful page and one pop up chat that the customer can have access to no matter which pages they are in |
 ---
+
+## Showcase Projects Videos
+
+https://github.com/user-attachments/assets/336652fd-4aaf-4cf2-8b3a-b724d35ec40c
+
+https://github.com/user-attachments/assets/647e6bae-bc62-4c8b-9e6e-a7c8946caf56
+
+https://github.com/user-attachments/assets/94d1da62-104d-4bc5-8ced-ddfcea3c0b51
+
