@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: Enhanced Docs API
+  description: API for collaborative document editing with AI features
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /documents:
+    get:
+      summary: Get all documents
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+    post:
+      summary: Create a new document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "My New Document"
+                content:
+                  type: string
+                  example: ""
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+  /documents/{id}:
+    get:
+      summary: Get a specific document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found
+    put:
+      summary: Update a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+    delete:
+      summary: Delete a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Document deleted
+
+  /ai/enhance:
+    post:
+      summary: Enhance text using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  example: "This is some text to enhance"
+                action:
+                  type: string
+                  enum: ["improve", "summarize", "expand", "simplify", "correct"]
+                  example: "improve"
+      responses:
+        '200':
+          description: Enhanced text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enhancedText:
+                    type: string
+                    example: "This is some enhanced and improved text"
+
+  /ai/generate:
+    post:
+      summary: Generate text using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  example: "Write a paragraph about artificial intelligence"
+                context:
+                  type: string
+                  example: "This is for a technical blog post"
+      responses:
+        '200':
+          description: Generated text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generatedText:
+                    type: string
+                    example: "Artificial intelligence represents a transformative technology..."
+
+components:
+  schemas:
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "doc_123"
+        title:
+          type: string
+          example: "My Document"
+        content:
+          type: string
+          example: "<p>Document content in HTML format</p>"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+      required:
+        - id
+        - title
+        - content
+        - createdAt
+        - updatedAt
