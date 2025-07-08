@@ -11,6 +11,11 @@ Welcome to **ii‑agent‑community**—a curated collection of showcase project
 
 ## Showcase Projects Videos
 
+https://github.com/user-attachments/assets/336652fd-4aaf-4cf2-8b3a-b724d35ec40c
+
+https://github.com/user-attachments/assets/647e6bae-bc62-4c8b-9e6e-a7c8946caf56
+
+https://github.com/user-attachments/assets/94d1da62-104d-4bc5-8ced-ddfcea3c0b51
 
 
 ---
