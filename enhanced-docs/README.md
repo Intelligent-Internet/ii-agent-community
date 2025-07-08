@@ -1,5 +1,10 @@
 # Enhanced Google Docs Clone
 
+<img width="1370" alt="Screenshot 2025-07-08 at 22 00 23" src="https://github.com/user-attachments/assets/cdc40123-e3f7-4942-a9a8-ba7cae2b2665" />
+<img width="1339" alt="Screenshot 2025-07-08 at 22 01 01" src="https://github.com/user-attachments/assets/edd52781-dd16-475e-8d6f-5315ce0089be" />
+<img width="1382" alt="Screenshot 2025-07-08 at 22 00 39" src="https://github.com/user-attachments/assets/461a0dd1-01d2-4c4d-b2ef-4432a253a3d9" />
+
+
 A collaborative document editor with AI-powered features built with Next.js, Socket.io, and OpenAI GPT-4o. Create, edit, and enhance your documents with the power of artificial intelligence and real-time collaboration.
 
 ![Enhanced Docs](https://img.shields.io/badge/Next.js-15.3.4-black?style=for-the-badge&logo=next.js)
